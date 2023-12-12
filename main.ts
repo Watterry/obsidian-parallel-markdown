@@ -18,11 +18,6 @@ interface ParallelMarkdownSettings {
 	CLOSE_OTHER: boolean;
 }
 
-// interface ParallelMarkdownSettings {
-// 	DIRECTION: SplitDirection;
-// 	CLOSE_OTHER: boolean;
-// }
-
 const DEFAULT_SETTINGS: ParallelMarkdownSettings = {
 	mySetting: 'default',
 	DIRECTION: 'vertical',
@@ -79,26 +74,6 @@ export default class ParalleMarkdownPlugin extends Plugin {
 			},
 		});
 
-		// This adds a complex command that can check whether the current state of the app allows execution of the command
-		// this.addCommand({
-		// 	id: 'open-sample-modal-complex',
-		// 	name: 'Open sample modal (complex)',
-		// 	checkCallback: (checking: boolean) => {
-		// 		// Conditions to check
-		// 		const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
-		// 		if (markdownView) {
-		// 			// If checking is true, we're simply "checking" if the command can be run.
-		// 			// If checking is false, then we want to actually perform the operation.
-		// 			if (!checking) {
-		// 				new SampleModal(this.app).open();
-		// 			}
-
-		// 			// This command will only show up in Command Palette when the check function returns true
-		// 			return true;
-		// 		}
-		// 	}
-		// });
-
 		// This adds a settings tab so the user can configure various aspects of the plugin
 		this.addSettingTab(new SampleSettingTab(this.app, this));
 
@@ -110,46 +85,7 @@ export default class ParalleMarkdownPlugin extends Plugin {
 
 
 		this.app.workspace.onLayoutReady(() => {
-
-			//this.addSettingTab(new SplitViewPluginSettingsTab(this.app, this));
-
-			// const ribbonIconEl = this.addRibbonIcon('vertical-split', 'Open Split View', (evt: MouseEvent) => {
-			// 	this.openSplitPaneView();
-			// });
-			//ribbonIconEl.addClass('split-view-plugin-ribbon-class');
-
-			// this.addCommand({
-			// 	id: 'open-split-view',
-			// 	name: 'Open Split View',
-			// 	checkCallback: (checking: boolean) => {
-			// 		if (getMarkdownLeaves()) {
-			// 			if (!checking) {
-			// 				this.openSplitPaneView();
-			// 			}
-			// 			return true;
-			// 		}
-			// 	}
-			// });
-
 			this.openSplitPaneView();
-
-			// this.addCommand({
-			// 	id: 'close-other-leaves',
-			// 	name: 'Close Other Leaves',
-			// 	checkCallback: (checking: boolean) => {
-			// 		if (getMarkdownLeaves()) {
-			// 			if (!checking) {
-			// 				const mrl = this.getMostRecentMDLeaf();
-			// 				if (mrl) {
-			// 					this.closeOtherLeaves(mrl.id);
-			// 				} else {
-			// 					new Notice('Could not determine which pane(s) to close.');
-			// 				}
-			// 			}
-			// 			return true;
-			// 		}
-			// 	}
-			// });
 		});
 
 		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
@@ -191,31 +127,22 @@ export default class ParalleMarkdownPlugin extends Plugin {
 			return;
 		}
 
-		// if (this.settings.CLOSE_OTHER) { //close empty & non-primary leaves
-		// 	this.closeOtherLeaves(srcLeaf.id);
-		// }
-
 		// choose parallel files
 		const files = await this.app.vault.getMarkdownFiles();
 		const selectedCN = files.filter(file => file.name === "witte-cn.md")[0];
 		const selectedEN = files.filter(file => file.name === "witte-en.md")[0];
 
-		//const newLeaf = this.app.workspace.createLeafBySplit(srcLeaf, this.settings.DIRECTION, false);
 		const newLeaf = this.app.workspace.getLeaf('split', this.settings.DIRECTION); // open a split window
 		console.log('selected file is: ', selectedCN.name)
 		await newLeaf.openFile(selectedCN, { state: { mode: 'source', active: true, focus: false } });
 		this.app.workspace.setActiveLeaf(newLeaf);
 
-		// if (srcView.getMode() === 'preview') {
-		// 	await srcView.setState({
-		// 		...srcView.getState(),
-		// 		mode: 'source'
-		// 	}, result: ViewStateResult);
-		// }
-		//srcLeaf.setGroupMember(newLeaf);
+		if (srcLeaf) {
+			srcLeaf.setGroupMember(newLeaf);
 
-		await srcLeaf.openFile(selectedEN, { state: { mode: 'source', active: true, focus: false } });
-		this.app.workspace.setActiveLeaf(srcLeaf);
+			await srcLeaf.openFile(selectedEN, { state: { mode: 'source', active: true, focus: false } });
+			this.app.workspace.setActiveLeaf(srcLeaf);
+		}
 	}
 }
 
