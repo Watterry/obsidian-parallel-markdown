@@ -1,5 +1,5 @@
 import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting,
-	     WorkspaceLeaf, TFile, SplitDirection } from 'obsidian';
+	     WorkspaceLeaf, TFile, SplitDirection, ObsidianProtocolData } from 'obsidian';
 
 // Remember to rename these classes and interfaces!
 
@@ -26,6 +26,9 @@ const DEFAULT_SETTINGS: ParallelMarkdownSettings = {
 
 export default class ParalleMarkdownPlugin extends Plugin {
 	settings: ParallelMarkdownSettings;
+	leafRight: WorkspaceLeaf;
+	leafLeft: WorkspaceLeaf;
+
 
 	async onload() {
 		await this.loadSettings();
@@ -40,7 +43,7 @@ export default class ParalleMarkdownPlugin extends Plugin {
 
 		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
 		const statusBarItemEl = this.addStatusBarItem();
-		statusBarItemEl.setText('Status Bar Text');
+		statusBarItemEl.setText('Parallel Markdown editor plugin');
 
 		// This adds a simple command that can be triggered anywhere
 		this.addCommand({
@@ -89,7 +92,22 @@ export default class ParalleMarkdownPlugin extends Plugin {
 		});
 
 		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
-		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
+		//this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
+
+        this.registerObsidianProtocolHandler(
+            'file-open',
+            this.actionHandler,
+        );
+
+		this.app.workspace.on("file-open", async (file) => {
+			if (!file) {
+				return
+			}
+			if(file.basename === "name1" || file.basename === "name2") {
+				return
+			}
+			console.log('Open file: ', file)
+		})
 
 		console.log('loading parallel markdown plugin finished.')
 	} // end of on load
@@ -106,6 +124,15 @@ export default class ParalleMarkdownPlugin extends Plugin {
 		await this.saveData(this.settings);
 	}
 
+	async actionHandler(params: ObsidianProtocolData): Promise<void> {
+		console.log("get a message:");
+		console.log(params.action);
+		if (params.action == 'file-open') {
+			console.log("try to open file");
+			console.log(params)
+		}
+	}
+
 	getMostRecentMDLeaf(): WorkspaceLeaf | null {
 		const mrl = this.app.workspace.getMostRecentLeaf();
 		if (mrl && mrl.view.getViewType() === 'markdown') {
@@ -115,34 +142,64 @@ export default class ParalleMarkdownPlugin extends Plugin {
 		}
 	}
 
-
-
+	//if it is left & right side panels, return
+	//else change the layout to left&right side panels
 	async openSplitPaneView() {
-		const srcLeaf: WorkspaceLeaf | null = this.getMostRecentMDLeaf();
-		const srcView = <MarkdownView>srcLeaf?.view ?? null;
+		//TODO: temparally method to do panels check, is there a better way?
+		console.log("try to iterate all leaves");
+		var i: number = 0;
+		this.app.workspace.iterateAllLeaves((leaf) => {
+			//console.log("read a leaf: ", leaf.getViewState().type);
+			if (leaf.getViewState().type === "markdown") {
+				if (i==0) {
+					this.leafLeft = leaf;
+				} else {
+					this.leafRight = leaf;
+				}
 
-		const srcFile = <TFile>srcLeaf?.view.file ?? null;
-		if (!srcFile) {
-			new Notice('Could not determine active file!');
+				i = i + 1;
+			}
+		});
+		
+		if (i>=2) {
+			console.log("Already have left&right leaf, do nothing");
+			this.openParallelFiles();
 			return;
 		}
 
-		// choose parallel files
-		const files = await this.app.vault.getMarkdownFiles();
-		const selectedCN = files.filter(file => file.name === "witte-cn.md")[0];
-		const selectedEN = files.filter(file => file.name === "witte-en.md")[0];
+		// split view
+		const srcLeaf: WorkspaceLeaf | null = this.getMostRecentMDLeaf();
+		//const srcView = <MarkdownView>srcLeaf?.view ?? null;
 
 		const newLeaf = this.app.workspace.getLeaf('split', this.settings.DIRECTION); // open a split window
-		console.log('selected file is: ', selectedCN.name)
-		await newLeaf.openFile(selectedCN, { state: { mode: 'source', active: true, focus: false } });
 		this.app.workspace.setActiveLeaf(newLeaf);
 
 		if (srcLeaf) {
-			srcLeaf.setGroupMember(newLeaf);
-
-			await srcLeaf.openFile(selectedEN, { state: { mode: 'source', active: true, focus: false } });
+			//srcLeaf.setGroupMember(newLeaf);// don't need to open the same file together
 			this.app.workspace.setActiveLeaf(srcLeaf);
 		}
+
+		if (srcLeaf) {
+			this.leafLeft = srcLeaf;
+		}
+
+		this.leafRight = newLeaf;
+		this.openParallelFiles();
+	}
+
+	async openParallelFiles() {
+		// choose parallel files
+		const files = await this.app.vault.getMarkdownFiles();
+		const selectedEN = files.filter(file => file.name === "witte-en.md")[0];
+		const selectedCN = files.filter(file => file.name === "witte-cn.md")[0];
+
+		console.log('selected file is: ', selectedEN.name)
+		await this.leafLeft.openFile(selectedEN, { state: { mode: 'source', active: true, focus: false } });
+		this.app.workspace.setActiveLeaf(this.leafLeft);
+
+		console.log('selected file is: ', selectedCN.name)
+		await this.leafRight.openFile(selectedCN, { state: { mode: 'source', active: true, focus: false } });
+		//this.app.workspace.setActiveLeaf(this.leafRight);
 	}
 }
 
