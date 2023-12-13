@@ -7,9 +7,6 @@ declare module "obsidian" {
 	interface View {
 		file: TFile;
 	}
-	interface WorkspaceLeaf {
-		id: string;
-	}
 }
 
 interface ParallelMarkdownSettings {
@@ -77,6 +74,14 @@ export default class ParalleMarkdownPlugin extends Plugin {
 			},
 		});
 
+		this.addCommand({
+			id: "parallel-position",
+			name: "Parallel position from left to right",
+			editorCallback: (editor: Editor, ctx: MarkdownView) => {
+				this.parallelLeftToRight(editor, ctx);
+			},
+		});
+
 		// This adds a settings tab so the user can configure various aspects of the plugin
 		this.addSettingTab(new SampleSettingTab(this.app, this));
 
@@ -103,10 +108,23 @@ export default class ParalleMarkdownPlugin extends Plugin {
 			if (!file) {
 				return
 			}
-			if(file.basename === "name1" || file.basename === "name2") {
-				return
+			if(file.basename === "witte-en") {
+				console.log('Open file: ', file)
+	
+				// await this.leafLeft.openFile(file, { state: { mode: 'source', active: true, focus: false } });
+				// this.app.workspace.setActiveLeaf(this.leafLeft);
+	
+				// console.log("try to open parallel file");
+	
+				// const parallelFile = this.app.vault.getAbstractFileByPath('witte-cn.md');
+				// if (parallelFile instanceof TFile) {
+				// 	console.log('parallel file is: ', parallelFile)
+				// 	await this.leafRight.openFile(parallelFile, { state: { mode: 'source', active: true, focus: false } });
+				// } else {
+				// 	// fileOrFolder is null or a TFolder... handle accordingly
+				// }
 			}
-			console.log('Open file: ', file)
+
 		})
 
 		console.log('loading parallel markdown plugin finished.')
@@ -190,8 +208,14 @@ export default class ParalleMarkdownPlugin extends Plugin {
 	async openParallelFiles() {
 		// choose parallel files
 		const files = await this.app.vault.getMarkdownFiles();
-		const selectedEN = files.filter(file => file.name === "witte-en.md")[0];
-		const selectedCN = files.filter(file => file.name === "witte-cn.md")[0];
+
+		//const selectedEN = files.filter(file => file.name === "witte-en.md")[0];
+		//const selectedCN = files.filter(file => file.name === "witte-cn.md")[0];
+
+		//random choose two files to open
+		//TODO: should choose files according to history or file name pattern
+	    const selectedEN = files[0];
+		const selectedCN = files[1];
 
 		console.log('selected file is: ', selectedEN.name)
 		await this.leafLeft.openFile(selectedEN, { state: { mode: 'source', active: true, focus: false } });
@@ -200,6 +224,36 @@ export default class ParalleMarkdownPlugin extends Plugin {
 		console.log('selected file is: ', selectedCN.name)
 		await this.leafRight.openFile(selectedCN, { state: { mode: 'source', active: true, focus: false } });
 		//this.app.workspace.setActiveLeaf(this.leafRight);
+	}
+
+	private parallelLeftToRight(editor: Editor, ctx: MarkdownView) {
+		console.log('command callback: parallelLeftToRight')
+
+		var sourceView: MarkdownView = <MarkdownView>this.leafLeft?.view ?? null;
+		var targetView: MarkdownView = <MarkdownView>this.leafRight?.view ?? null;
+        if (ctx === <MarkdownView>this.leafRight?.view) {
+			console.log("exchange source and target:");
+			targetView = sourceView;
+			sourceView = ctx;
+		}
+
+		//const sourceView = <MarkdownView>this.leafLeft?.view ?? null;
+		//const targetView = <MarkdownView>this.leafRight?.view ?? null;
+		if (sourceView && targetView) {
+			const file = this.app.workspace.getActiveFile();
+			console.log("TFile:", file);
+
+			// sync method 1
+			// const numberOfLines = sourceView.editor.getCursor().line;
+			// console.log("file length is:", numberOfLines);
+			// targetView.currentMode.applyScroll((numberOfLines - 1));
+
+			// sync method 2
+			var target = sourceView.editor.getCursor();
+			targetView.editor.setCursor(target);
+		} else {
+			console.log("This is not left & right view layout");
+		}
 	}
 }
 
