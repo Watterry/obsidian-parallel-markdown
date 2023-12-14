@@ -14,8 +14,28 @@ Typical usage scenario:
 
 2. Open the markdown file and enable Obsidian Parallel Markdown plugin, then you can edit the translation on the right side and check the original text on the left side. If you scroll one side, the other side will scroll according to paragraph.
 
-TODO: add an image or usage video
+## Usage
+
+Currently, this plugin need to parrallel two markdown by command or by sidebar icon.
+
+[[https://youtu.be/odRDgjURxAI]]
+
+There are two ways to use this plugin:
+
+1. Open two markdowns file left to right. By default, the plugin will open left & right markdown view for you.
+
+2. Use command "parallel position" to sync the position between two markdown files. By default, the activate markdown file's position will use to sync to another markdown file.
+
+[[./assets/usage-1.png]]
+
+3. Click icon "Parallel" in sidebar to do the same thing described in step2.
+
+[[./assets/usage-2.png]]
 
 ## TODO list
 
 - add translate API
+
+## feature request
+
+If you want any feature, just write a issue.

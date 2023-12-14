@@ -1,5 +1,5 @@
 import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting,
-	     WorkspaceLeaf, TFile, SplitDirection, ObsidianProtocolData } from 'obsidian';
+	     WorkspaceLeaf, TFile, SplitDirection, ObsidianProtocolData, View } from 'obsidian';
 
 // Remember to rename these classes and interfaces!
 
@@ -30,10 +30,14 @@ export default class ParalleMarkdownPlugin extends Plugin {
 	async onload() {
 		await this.loadSettings();
 
-		// This creates an icon in the left ribbon.
-		const ribbonIconEl = this.addRibbonIcon('dice', 'Sample Plugin', (evt: MouseEvent) => {
+		// add Parallel trigger icon
+		const ribbonIconEl = this.addRibbonIcon('check-check', 'Parallel', (evt: MouseEvent) => {
 			// Called when the user clicks the icon.
-			new Notice('This is a notice!');
+			var ctx = this.app.workspace.getActiveViewOfType(MarkdownView) as MarkdownView;
+			if (!ctx) {
+				ctx = <MarkdownView>this.leafLeft?.view ?? null;
+			}
+			this.parallelLeftToRight(ctx.editor, ctx);
 		});
 		// Perform additional things with the ribbon
 		ribbonIconEl.addClass('my-plugin-ribbon-class');
@@ -76,7 +80,7 @@ export default class ParalleMarkdownPlugin extends Plugin {
 
 		this.addCommand({
 			id: "parallel-position",
-			name: "Parallel position from left to right",
+			name: "Parallel position",
 			editorCallback: (editor: Editor, ctx: MarkdownView) => {
 				this.parallelLeftToRight(editor, ctx);
 			},
@@ -254,6 +258,8 @@ export default class ParalleMarkdownPlugin extends Plugin {
 		} else {
 			console.log("This is not left & right view layout");
 		}
+
+		new Notice('success parallel markdown files');
 	}
 }
 
