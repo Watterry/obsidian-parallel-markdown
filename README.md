@@ -18,7 +18,7 @@ Typical usage scenario:
 
 Currently, this plugin need to parrallel two markdown by command or by sidebar icon.
 
-[[https://youtu.be/odRDgjURxAI]]
+[!Demo the Usage](https://youtu.be/odRDgjURxAI)
 
 There are two ways to use this plugin:
 
@@ -26,11 +26,11 @@ There are two ways to use this plugin:
 
 2. Use command "parallel position" to sync the position between two markdown files. By default, the activate markdown file's position will use to sync to another markdown file.
 
-[[./assets/usage-1.png]]
+![use command "parallel position"](./assets/usage-1.png)
 
 3. Click icon "Parallel" in sidebar to do the same thing described in step2.
 
-[[./assets/usage-2.png]]
+![use icon "Parallel"](./assets/usage-2.png)
 
 ## TODO list
 
