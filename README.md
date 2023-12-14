@@ -18,7 +18,7 @@ Typical usage scenario:
 
 Currently, this plugin need to parrallel two markdown by command or by sidebar icon.
 
-[!Demo the Usage](https://youtu.be/odRDgjURxAI)
+[![Usage Instruction](./assets/usage-video-frontpage.png)](https://youtu.be/odRDgjURxAI)
 
 There are two ways to use this plugin:
 
